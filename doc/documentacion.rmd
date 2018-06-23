@@ -1,0 +1,696 @@
+---
+title: 'Sistemas Multimedia'
+subtitle: 'Documentación de la práctica de evaluación'
+author: "Juan Luis Suárez Díaz"
+date: "`r format(Sys.time(), '%d de %B de %Y')`"
+output:
+  pdf_document:
+    fig_caption: yes
+    highlight: haddock
+    toc: yes
+    toc_depth: 2
+    includes:
+      in_header: mystyles.sty
+bibliography: references.bib
+fontsize: 10pt
+geometry: a4paper, top=2.5cm, bottom=2.5cm, left=3cm, right=3cm
+lang: es-ES
+linestretch: 1
+csl: ieee.csl
+---
+<!--
+Highlights: default, tango, pygments, kate, monochrome, espresso, zenburn, haddock, null
+-->
+<!--
+include-after: |2-
+  * * *
+  Esta obra se distribuye bajo una [Licencia Creative Commons Atribución-NoComercial-CompartirIgual 4.0 Internacional](http://creativecommons.org/licenses/by-nc-sa/4.0/).
+  
+mainfont: Arial
+monofont: Source Code Pro
+
+abstract: La navegación segura en Internet se extiende lentamente debido a numerosas
+  dificultades en los procesos necesarios para su implementación. En este texto se
+  explican y se analizan tres propuestas dirigidas a la difusión de las comunicaciones
+  seguras y a la mejora de la certificación y la autenticación. Se observan las nuevas
+  funcionalidades que traerá el próximo estándar HTTP/2 y se realiza un ejemplo de
+  instalación en un servidor. De la misma forma, se presenta una autoridad de certificación
+  automatizada, Let's Encrypt, y se demuestra su funcionamiento mediante las implementaciones
+  de cliente y servidor del protocolo asociado ACME. Por último, se explica el mecanismo
+  de verificación de identidad mediante certificados Convergence, frente a las autoridades
+  de certificación, y se muestra un ejemplo de su uso.
+  
+(Cosas que puedo añadir a la cabecera)
+-->
+
+<!--
+
+Añadir imagenes:
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=10 cm]{./images/1_1.png}
+\caption{Instalación de phoronix suite.\label{fig:phinst}}
+\end{figure}
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=10 cm]{./images/1_2.png}
+\caption{Lista de test disponibles.\label{fig:phtests}}
+\end{figure}
+
+-->
+\newpage
+
+# Introducción
+
+Se ha desarrollado una aplicación que permite trabajar con diferentes elementos multimedia: imágenes, sonido y vídeo. El siguiente documento explica las funcionalidades que desarrolla esta aplicación. El documento está dividido en dos partes, una primera parte describe los requisitos que verifica la aplicación y las funcionalidades que ofrece. En la segunda parte, se realiza un análisis de estos requisitos y para cada uno de estos requisitos se explica el diseño que se ha adoptado, además de indicar unas instrucciones de cómo se utiliza la aplicación para cada una de las funcionalidades. 
+
+# Requisitos
+
+## Requisitos de gráficos
+
+La aplicación permitirá trabajar con medios gráficos. Para ello, debe permitir crear lienzos de dibujo sobre los cuales se podrá construir de forma interactiva distintas figuras. Esta interacción con el lienzo se realizará a través de movimientos y pulsaciones con el ratón y, eventualmente, estableciendo algunas opciones mediante el teclado. Cada figura sobre el lienzo será una entidad independiente del resto de figuras, y por tanto poseerá sus propios atributos, que se definirán a continuación, y que determinarán la visualización gráfica de esta.
+
+La aplicación permitirá dibujar las figuras que se listan a continuación:
+
+- Líneas rectas.
+- Rectángulos.
+- Rectángulos redondeados.
+- Elipses.
+- Arcos.
+- Curvas cuadráticas o con un punto de control.
+- Curvas cúbicas o con dos puntos de control.
+- Trazo libre.
+- Polígonos.
+- Un área que definirá una figura estrellada que representará un sol.
+
+Como ya se ha mencionado, cada figura dispondrá de sus propios atributos, los cuales se indican a continuación.
+
+- Un **color de trazo**.
+- Un **tipo de relleno**. Las figuras podrán rellenar su interior de distintas formas. Las opciones que contemplará la aplicación serán rellenar sin color, rellenar con un color liso, rellenar mediante degradados verticales, horizontales, diagonales y radial periódico, y finalmente, rellenar con una imagen de textura predefinida. Respecto a los degradados, serán de dos colores, donde uno de ellos es el color de trazo.
+- Un **trazo**, que determinará cómo se dibuja el borde de la figura. Este, a su vez, estará definido mediante un grosor, y mediante un tipo de trazo, el cual indicará la continuidad de este, los patrones de discontinuidad o el tipo de borde en las discontinuidades. Se contemplarán los siguientes tipos de trazos: sin trazo, trazo continuo, trazo discontinuo mediante segmentos cortos, trazo discontinuo mediante segmentos largos y trazo de ejes (secuencias discontinuas formadas por parejas de segmentos cortos y largos que se repiten). Todos los trazos discontinuos, permitirán elegir además añadir sobre las discontinuidades bordes cuadrados, redondos o ningún borde.
+- **Alisado de bordes**: se podrá activar, si el usuario lo estima oportuno, una mejora en el proceso de renderizado correspondiente al alisado de los bordes.
+- **Transparencia**: las figuras tendrán un grado de transparencia que podrá variar desde la opacidad total hasta ser completamente invisible.
+- **Transformaciones:** Las figuras podrán ser rotadas y escaladas respecto a su centro, permitiendo variar así sus ejes de simetría o sus proporciones.
+
+Las figuras, como se comentó previamente, serán dibujadas sobre un lienzo, el cual permitirá las siguientes operaciones:
+
+- **Construir de forma interactiva cualquiera de las figuras definidas.** El lienzo permitirá construir cualquiera de las figuras mediante movimientos de ratón sobre este, de forma que las figuras se podrán ir visualizando conforme el ratón es movido. La construcción podrá iniciarse cuando se pulsa el ratón sobre el lienzo, y no finalizará hasta que se suelte. En el caso de algunas figuras, como las curvas o los polígonos, el lienzo permitirá realizar la construcción en más de un paso, permitiendo determinar de esta forma los puntos de control o los distintos lados, respectivamente. El lienzo además permitirá además establecer los atributos de las figuras que se construyen, sin que esto afecte a los de las figuras ya construidas.
+
+- Un **modo de edición**. Si se selecciona este modo, se podrán seleccionar las distintas figuras presentes en el lienzo. El número de figuras que se podrán seleccionar será arbitrario, y la selección se hará efectiva haciendo click sobre cualquier figura que esté en el lienzo. Cuando una figura esté seleccionada, un rectángulo discontinuo envolverá a esta. Con las figuras seleccionadas se podrán realizar distintas operaciones, que se indican en los siguientes puntos.
+
+- **Modificar los atributos de las figuras seleccionadas.** Las figuras seleccionadas podrán ser editadas para que cualquiera de sus atributos se actualice de acuerdo a los atributos indicados en el lienzo. En caso de haber más de una figura seleccionada, se actualizarán todas con los mismos atributos indicados.
+
+- **Mover las figuras seleccionadas.** Las figuras seleccionadas podrán ser arrastradas de forma que cambie su posición en el lienzo. Cuando el modo de edición esté activado y haya figuras seleccionadas, al pulsar y arrastrar el ratón, todas las figuras seleccionadas se moverán en la misma dirección del ratón.
+
+- **Cambiar la profundidad de las figuras seleccionadas.** El lienzo permitirá modificar la profundidad de las figuras seleccionadas, entendiendo que una figura está más profunda que otra si la primera es tapada por la segunda cuando se superponen. Respecto a la profundidad, el lienzo permitirá mover las figuras seleccionadas una posición hacia delante o hacia atrás, o enviarlas al fondo o al frente.
+
+- **Modo regular.** El modo regular es un modo activable durante la creación de figuras, que permite dibujar figuras con las mismas proporciones verticales y horizontales. De esta forma se puede, entre otras cosas, dibujar circunferencias al construir elipses, dibujar cuadrados al construir rectángulos, o dibujar rectas verticales, horizontales o que formen 45º respecto a los ejes. Este modo se podrá activar manteniendo pulsada la tecla `Shift` mientras se construye una figura. Se volverá a desactivar si dicha tecla se suelta [^regular].
+
+- **Restringir el área de dibujo a un rectángulo prefijado.** El área de dibujo estará delimitada por un rectángulo con unas determinadas dimensiones (que serán modificables), de forma que solo se visualizarán las partes de las formas que se hayan dibujado dentro de dicho rectángulo.
+
+
+[^regular]: El modo regular está basado en un truco poco conocido de la aplicación Paint de Microsoft: <https://es.wikihow.com/dibujar-un-circulo-perfecto-en-Microsoft-Paint>.
+
+## Requisitos de imágenes
+
+Adicionalmente a la creación y manipulación de figuras, el lienzo permitirá añadir una imagen, que se mostrará detrás de las figuras. La aplicación permitirá realizar numerosas operaciones sobre dicha imagen, las cuales se indican a continuación:
+
+- **Guardar la imagen**. La aplicación podrá guardar la imagen, junto con las figuras dibujadas sobre ella, en ficheros de distinto tipo.
+- **Duplicar la imagen.** Se podrá crear un nuevo lienzo con una copia de la imagen.
+- **Modificar el brillo**, mediante un deslizador.
+- **Filtros.** La aplicación permitirá aplicar filtros de emborronamiento (medias de `3x3`, `5x5` y `7x7` y binomial), de enfoque, de relieve y laplaciano, de detección de bordes.
+- **Contraste:** se podrá aplicar contraste normal, iluminado y oscurecido.
+- **Negativo:** se podrán invertir los colores de la imagen.
+- **Extracción de bandas:** La aplicación permitirá crear nuevas imágenes con las bandas de una determinada imagen, de forma que modificaciones en una banda en particular o en la imagen original, afecten a todas las bandas y a la imagen.
+- **Conversión de espacios de color**, a los espacios RGB, YCC y GRAY.
+- **Giro.** La aplicación permitirá girar la imagen mediante deslizador, además de giros exactos de 90º, 180º y 270º.
+- **Escalado.** Se podrá aumentar y disminuir el tamaño de la imagen.
+- **Efecto sepia.**
+- **Operaciones Lookup:** se podrán aplicar a las imágenes operaciones Lookup basadas en la función arcotangente y en la campana de Gauss.
+- **Operaciones pixel a pixel:** se podrán aplicar a las imágenes los efectos *frío* y *calor*, que cambian la tonalidad de los colores, así como un eliminador de fondo, que deja un determinado color elegible por el usuario transparente.
+- **Operaciones componente a componente:** se podrá aplicar la operación *traslación modular*, que cambia todos los componentes de la imagen en la misma medida y de forma cíclica.
+- **Tintado.** Se podrá acercar las imágenes a un determinado color, elegible por el usuario, una determinada cantidad, a través de un deslizador.
+- **Umbralización.** Se podrá aplicar umbralización basada en niveles de gris con deslizador para modificar el umbral. Además, la umbralización permitirá establecer el color que toman los píxeles que superan el umbral, de forma que la imagen resultante tendrá dos colores: el blanco y el color elegido.
+- **Operaciones binarias.** Se podrán sumar (y mezclar en distintos grados, mediante deslizador) dos imágenes. También se podrá calcular la diferencia y el producto de dos imágenes.
+- **Detección de fronteras.** Se podrán detectar las fronteras de las imágenes mediante el operador Sobel.
+- **Histograma.** La aplicación permitirá mostrar el histograma de una imagen, para cada banda.
+- **Ecualización.** La aplicación podrá cambiar la distribución del histograma de la imagen mediante la ecualización.
+- **Modificación del tamaño de la imagen.** La aplicación permitirá modificar las dimensiones de una imagen. El cambio de tamaño podrá realizarse tanto redimensionando la imagen, sin modificar los píxeles de la imagen, o escalando la imagen, de forma que esta se ajusta al nuevo tamaño.
+
+## Requisitos de audio y vídeo.
+
+La aplicación permitirá reproducir tanto sonidos como vídeos, además de grabar nuevos sonidos. Dispondrá de un panel de control desde donde se puede iniciar, pausar, parar o cambiar la posición del sonido o vídeo seleccionado. Además, se podrá ver las imágenes emitidas por la webcam, si el ordenador dispone de una. Los archivos de audio y vídeo estarán disponibles en una lista de reproducción. Los requisitos que verificará el módulo de sonido y vídeo se muestran a continuación:
+
+- Añadir archivos de sonido y vídeo a la lista de reproducción.
+- Reproducir el archivo de audio o vídeo seleccionado, o pausarlo (y reanudarlo después desde la misma posición) si ya se estaba reproduciendo.
+- Parar la reproducción del archivo de audio o vídeo en ejecución. En este caso, una posterior reproducción comenzaría desde el principio.
+- Control del tiempo de reproducción mediante un deslizador. Adicionalmente se muestran tanto el tiempo actual como la duración total.
+- Modificación de la posición del sonido o vídeo en ejecución, mediante el deslizador anterior.
+- Grabación de sonidos. Los sonidos se grabarán a través del micrófono del ordenador. El tiempo de grabación se irá mostrando durante la grabación. Al finalizar la grabación, se podrá elegir si el archivo se guarda en un nuevo fichero, o si se descarta la grabación.
+- Abrir la webcam y mostrarla en una ventana.
+- Apagar la webcam al cerrar la ventana.
+- Tomar instantáneas, tanto de la webcam como de los vídeos en reproducción.
+
+
+## Requisitos visuales y de carácter general
+
+La aplicación estará formada por un conjunto de barras herramientas y un escritorio, donde podrán manejarse distintos tipos de ventanas:
+
+- Ventanas de imagen, que contendrán un lienzo donde dibujar las formas definidas en los requisitos de gráficos, además de visualizar una imagen de fondo, editable según las especificaciones de los requisitos de imágenes.
+- Ventanas de vídeo, que mostrarán la reproducción de distintos vídeos. Estos vídeos se controlarán según los requisitos de vídeo especificados.
+- Una ventana de Webcam, que mostrará la imagen percibida por la webcam.
+
+Las barras de herramientas estarán divididas en tres grandes grupos, que a su vez contendrán subgrupos con herramientas similares:
+
+- **Barras de gráficos:** de formas, de color y de atributos.
+- **Barras de imagen:** de iluminación, de convolución, de efectos, de espacios de color, de afinidades y de operaciones binarias.
+- **Barras de audio y vídeo:** de control, de reproducción, de grabación y de webcam.
+
+Cada grupo de barras podrá mostrarse u ocultarse de acuerdo a las necesidades del usuario.
+
+Además, la aplicación dispondrá de varios menús:
+
+- **Menú de archivos:** tendrá la opción *Nuevo*, que creará un nuevo lienzo vacío, de *Abrir*, que podrá abrir cualquier medio de imagen, audio o vídeo (pudiendo abrir simultáneamente varios archivos), de *Guardar*, que permitirá guardar las imágenes de acuerdo a lo especificado en los requisitos, y de *Duplicar*.
+- **Menú de imagen:** tendrá la opción de cambiar el tamaño de las imágenes.
+- **Menú de edición:** contendrá todas las opciones de visualización para las distintas barras de herramientas.
+- **Menú de ayuda:** contendrá información acerca del programa.
+
+Sobre las barras de herramientas asociadas a formas, a continuación se comentan algunos aspectos importantes sobre su aspecto visual.
+
+- **Actualización de los atributos de gráficos en la barra de herramientas.** Los atributos de gráficos de la barra de herramientas se actualizarán de acuerdo a los atributos de la última de las figuras seleccionadas, en caso de estar en modo edición y de que haya figuras seleccionadas. En caso contrario, se actualizarán con los atributos del lienzo para creación de nuevas formas. Al cambiar de ventanas, se actualizarán de la misma manera con las formas y el lienzo de la nueva ventana.
+- **Barra de color.** Habrá dos barras de color: un color primario y un color secundario. El color primario definirá el color del trazo, y será además el primer color utilizado en los rellenos de gradiente. El color secundario definirá el color de fondo, en caso de relleno con un color liso, o el segundo color en el relleno con gradiente. El color primario se utilizará además en las operaciones con imágenes que requieran de un color. Ambas barras de color permitirán escoger un conjunto predeterminado de colores, pero se permitirá añadir cualquier color adicional a través de un diálogo.
+- **Barra de estado:** La aplicación dispondrá de una barra de estado que mostrará, cuando se esté trabajando con ventanas de dibujo, la herramienta seleccionada, las coordenadas del píxel sobre el que pasa el ratón en el lienzo, y el color RGB asociado a ese píxel.
+
+
+\pagebreak
+
+
+# Análisis y diseño
+
+## Aspectos generales de la aplicación
+
+### Aspecto visual
+
+La aplicación desarrollada presenta una interfaz gráfica como la que se muestra en la figura \ref{fig:interfaz}. En ella podemos ver una barra de menús, con los cuatro menús indicados en los aspectos generales de la sección de requisitos, y una barra de herramientas que agrupa todas las herramientas del programa. Las barras de herramientas están divididas en distintos grupos, los cuales pueden hacerse visibles o invisibles a través del menú *Edición*. Cada uno de los elementos de la barra de herramientas dispone de un *tooltip text* que indica la funcionalidad que realiza la herramienta sobre la que se pasa el ratón.
+
+\begin{figure}[h]
+\centering
+\includegraphics{./images/interfaz.png}
+\caption{Interfaz gráfica de la aplicación.} \label{fig:interfaz}
+\end{figure}
+
+Además, como ya se comentó previamente, algunas de las funcionalidades requieren el uso de deslizadores, que no se muestran en la figura \ref{fig:interfaz}. El diseño adoptado incluye estos deslizadores a través de ventanas flotantes que se activan o desactivan al pulsar su botón asociado en la barra de herramientas. De la misma forma, estas ventanas flotantes incluyen en algunos casos más herramientas, como ocurre con la selección de formas y sus atributos, y en la selección de efectos de imágenes. En la figura \ref{fig:floating} se muestra la interfaz anterior junto con algunas de las ventanas flotantes activadas, mostrando más herramientas disponibles. El análisis y diseño de las ventanas flotantes se explicará en la siguiente sección.
+
+\begin{figure}[h]
+\centering
+\includegraphics{./images/floating.png}
+\caption{Algunas ventanas flotantes en la aplicación.} \label{fig:floating}
+\end{figure}
+
+### Ventanas flotantes
+
+El uso de ventanas flotantes en la aplicación es una herramienta para simplificar el diseño de la barra de herramientas de forma elegante, de forma que todas las herramientas están disponibles en una única línea, ocupando un espacio razonable dentro de la barra física, y permitiendo acceder al resto de opciones a través de estas ventanas. En Java, la biblioteca `swing` proporciona la clase `JWindow`, que permite construir una ventana sin nungún tipo de contenido (barra superior) adicional. Se ha utilizado esta clase para la realización de las ventanas flotantes. Sin embargo, la clase `JWindow` no proporciona directamente todas las características buscadas, como es el caso de las siguientes:
+
+- Que la ventana se coloque en una posición adecuada. Concretamente, alrededor (por ejemplo, debajo) del botón o el componente que va a tener asociado dicha ventana.
+- Que la ventana no pierda la visibilidad cuando pierda el foco. La propiedad `AlwaysOnTop` de `JWindow` en principio puede solucionar este problema, pero en tal caso la ventana seguirá mostrándose aunque se cambie a otra aplicación, lo que tampoco es deseable.
+- Que si se redimensiona o se mueve la ventana principal, la ventana flotante se mueva con ella para mantener la posición relativa respecto a su componente asociada.
+
+Para conseguir que se verifiquen estas características, se ha diseñado la clase `FloatingWindow`, que extiende a `JWindow`, y está disponible en el paquete `sm.jlsd.ui` de la biblioteca. Esta clase añade la funcionalidad de asociar a la ventana un componente, y en una determinada posición (encima, debajo o en el mismo sitio). La asociación de un componente se traduce para la ventana en ponerse a escuchar los eventos asociados al movimiento o cambio de visibilidad del contenedor de dicho componente. De esta forma, cada vez que el contenedor se mueva podremos actualizar la posición de la ventana. De la misma forma, podemos activar la propiedad `AlwaysOnTop` y cuando se activen los eventos que indican la desactivación del contenedor, la ventana flotante se hará invisible con el resto del programa.
+
+Finalmente, la ventana flotante dispone de un panel interno en el que se añadirán las componentes deseadas, mediante el método `getInternalPanel()`.
+
+### Filtros de archivos
+
+Como ya se ha dicho, la aplicación permite trabajar tanto con archivos de imagen, audio y vídeo. Los archivos de imagen soportados son aquellos que permite Java a través de la clase `ImageIO`. En cuanto a los archivos de audio y vídeo, la aplicación soporta los formatos de la librería `VLCj`, que es la que utiliza internamente. A la hora de abrir un nuevo archivo, es importante determinar de qué tipo de archivo se trata, y así realizar la acción más apropiada para ese archivo. Para ello, Java proporciona la clase `FileFilter`. Los objetos de esta clase, por un lado, se pueden asociar a un diálogo de selección de archivos, para que muestre los archivos del tipo indicado. Por otra parte, permite comprobar si un archivo es del tipo indicado para ese filtro mediante el método `accept(File)`. De esta forma, la tarea de distinguir tipos de archivos queda muy simplificada una vez se definen los filtros.
+
+La tarea que estamos tratando se reduce, por tanto, a definir los filtros adecuados. El filtro de imágenes lo obtenemos a través de los formatos admitidos en la clase `ImageIO`. Para los filtros de audio y vídeo, la biblioteca `VLCj` proporciona las clases `AudioFileFilter` y `VideoFileFilter`, que cumplen las finalidades asociadas. Por último, se ha añadido un filtro adicional, `MediaFileFilter`, disponible en el paquete `sm.jlsd.utils` de la biblioteca, y que agrupa a todos los archivos multimedia que soporta la aplicación. Este filtro sigue la misma estructura que los definidos en `VLCj` [^gitvlcj].
+
+[^gitvlcj]: Véase <https://github.com/caprica/vlcj/tree/master/src/main/java/uk/co/caprica/vlcj/filter>.
+
+## Módulo de gráficos.
+
+Como se indicó en la sección de requisitos, el módulo de gráficos debe proporcionar un lienzo sobre el que se podrán crear de forma interactiva distintas figuras, cada una con sus propios atributos. Java dispone de distintas clases que implementan la interfaz `Shape`, las cuales pueden ser dibujadas sobre un objeto `Graphics2D`. Sin embargo estas figuras no poseen atributos propios que permitan dibujarlas de forma independiente, ni disponen de un conjunto de métodos comunes para poder trabajar con ellas en el lienzo independientemente del tipo de forma elegido. Por tanto, surge la necesidad de ampliar la funcionalidad de estas clases para que se adapten bien a la aplicación que queremos diseñar.
+
+Una primera idea intuitiva consistiría en hacer que las nuevas clases que vamos a crear extiendan, por una parte, a su clase asociada definida en las bibliotecas de Java, y por otra parte, a una clase abstracta que contenga todos los atributos que se pueden establecer en las distintas formas, así como los métodos que serán comunes a todas las clases y que se utilizarán para el manejo interactivo de las formas. Sin embargo, la herencia múltiple no está contemplada en Java, por lo que será necesario simular esta herencia utilizando los recursos de Java, de la forma más económica posible.
+
+Por ello, la solución propuesta consiste en la creación de nuevas clases de formas, una por cada forma especificada en los requisitos. Estas clases de formas extenderán a sus formas asociadas definidas en las bibliotecas de Java, o a otra de estas nuevas clases. La gestión de atributos se realizará mediante la creación de una nueva clase, `BasicShapePainter`, que dispondrá de todos los atributos que puede tener una forma, tal y como se especifican en los requisitos, y con métodos `set` y `get` para modificarlos. Notemos que, en algunos casos, nos interesará manejar propiedades por separado que en las bibliotecas de Java forman parte de una misma clase, como por ejemplo el grosor de trazo y el tipo de trazo, cuando Java dispone únicamente de una clase `Stroke`, que contiene la información de ambos atributos. En estos casos, los atributos accesibles a través de los `get` y `set` serán los que nos interesa manejar por separado (grosor y tipo de trazo), mientras que internamente se utilizarán para dibujar los objetos de las librería de gráficos de Java (la clase `Stroke`). Dichos objetos se actualizarán cada vez que se llame a un `set` de uno de los atributos asociados. La clase `BasicShapePainter` añadirá, además, una referencia a la forma asociada que se quiere dibujar, y dispondrá del método de dibujo que la pintará, con los atributos establecidos, en un objeto `Graphics2D`.
+
+Por otra parte, el manejo conjunto de formas de distintos tipos se realizará mediante el desarrollo de la interfaz `JShape`. Esta interfaz extenderá a la interfaz `Shape` de las bibliotecas de Java, y tiene como finalidad definir un conjunto de funcionalidades que permitan la construcción y el manejo interactivo de cualquier tipo de figura, así como el dibujo de estas.  Es por esto por lo que en `JShape` se definen los siguientes métodos:
+
+- `void updateShape(Point2D,Point2D)`: este método será el encargado de actualizar la figura durante su construcción. Recibe como argumento dos puntos, que representan la posición inicial y la final de la forma. Aunque la implementación dependerá de cada figura, en general estos puntos definen la diagonal del rectángulo que envuelve a la forma. Respecto al lienzo de dibujo, este método responde a una secuencia de eventos de ratón `pressed-dragged`, donde el punto donde se pincha el ratón es el primer argumento, y el punto donde se va moviendo es el segundo argumento. Este método permite además cambiar su comportamiento en el caso de las formas que necesitan de varios pasos de construcción, como las curvas o los polígonos, de forma que en cada paso actualizará la figura de la forma más adecuada. El control del paso de construcción se controlará con los siguientes métodos.
+- `boolean commitShape()`: este método se encargará de confirmar un paso de construcción de la figura, por ejemplo, cuando se ha terminado de mover un lado del polígono, o cuando se ha establecido la forma de una curva. En las figuras que se construyen en un solo paso no tendrá ningún efecto. Devolverá un valor booleano, indicando si la figura ha terminado de construirse o quedan más pasos de construcción. La ejecución de este método hará cambiar el comportamiento de `updateShape` para construir el siguiente paso de la forma (para el ejemplo anterior, en el caso del polígono, empezará a construirse el siguiente lado, y en el de la curva, se establecerá el primer punto de control). Respecto al lienzo de dibujo, este método estará asociado al levantamiento (`release`) del ratón, tras una secuencia `pressed-dragged`.
+- `void confirmShape()`: este método finalizará la construcción de la figura. Tendrá solo efecto en las figuras que no tienen un número fijo de pasos de construcción, como es el caso del polígono. Podrá realizar alguna acción adicional sobre la forma, para completarla (en el caso del polígono, por ejemplo, unirá el último vértice con el primero). En el lienzo de dibujo, esta función estará asociada a un doble click de ratón.
+- `void move(Point2D)`: este método se encargará de cambiar la posición de la figura. Recibe como argumento un punto bidimensional que representa un vector de traslación.
+- `JRectangle getEnclosingRectangle()`: este método devolverá un rectángulo que envuelve a la figura. Será de utilidad para seleccionar en el modo edición. El objeto `JRectangle` que se devuelve pertenece a la clase de rectángulos desarrollada.
+- `void paint(Graphics2D)`: es el método encargado de dibujar la figura en el objeto `Graphics2D` indicado.
+- `BasicShapePainter getPainter()`: permite acceder a la clase de atributos de la forma, para poder modificarlos convenientemente.
+
+Así, cada forma extenderá a su correspondiente forma de las bibliotecas de Java, implementará la interfaz `JShape` y tendrá un atributo `BasicShapePainter`. La combinación de estas tres relaciones permitirá desarrollar las subclases de formas con la funcionalidad buscada y de forma sencilla. Todas estas clases están disponibles en el paquete `sm.jlsd.graphics` de la biblioteca desarrollada.
+
+Antes de explicar las subclases de formas implementadas, se va a explicar cómo quedaría el diseño del lienzo de dibujo basándose en las clases creadas anteriormente. El lienzo de dibujo está implementado en la clase `Canvas2D` del paquete `sm.jlsd.ui`. Es un panel en cuyo interior se dibujará un vector de formas. Soportará las operaciones de construcción y edición de formas a través de los eventos de ratón adecuados. También dispondrá de los mismos atributos que tiene la clase `BasicShapePainter`, de forma que para las nuevas formas a construir se establezcan dichos atributos. Esto sugiere la idea de diseñar una nueva interfaz, `BasicAttributePainter`, que implementarán tanto `Canvas2D` como `BasicShapePainter`. Esto será de utilidad a la hora de actualizar la interfaz con los atributos del lienzo o de la forma seleccionada, según estemos en modo edición o no: bastará con obtener el `BasicAttributePainter` deseado en cada situación.
+
+El lienzo dispondrá de un vector de formas, que serán las que se dibujarán, y mantendrá referencias a las formas seleccionadas y al atributo en construcción, en caso de haberlos. Además de los atributos de las formas, dispondrá del tipo de herramienta actual con la que se dibujará. Estos tipos están definidos en la clase `PaintTool` de `sm.jlsd.graphics`. Utilizando las bibliotecas de gráficos diseñadas, las operaciones que realizará el lienzo se realizarán como se muestra a continuación:
+
+- **Dibujo de figuras.** El método `paint` del lienzo establecerá un área de recorte (`Clip`), y a continuación bastará con llamar al método `paint` de cada figura en el vector de figuras.
+- **Creación de figuras.** Las figuras se crearán según la herramienta actual, utilizando el constructor adecuado, que las establecerá inicialmente como un punto. La forma se añadirá al vector de formas y sus atributos se establecerán según los atributos actuales del lienzo.
+- **Actualización interactiva de figuras.** Cada vez que se escuche un evento de `mouse pressed`, si no se está en modo edición, se iniciará la creación de una figura tal y como se indica en el punto anterior, siempre que no haya una de varios pasos en construcción. Cada vez que se escuche un evento de `mouse dragged`, si no se está en modo edición, se actualizará la figura en construcción mediante la llamada a su método `updateShape`. Cada vez que se escuche un `mouse released` fuera del modo edición, bastará con llamar al método `commitShape` de la figura seleccionada, el cual nos indicará además si ha terminado la construcción o si seguimos manteniendo la figura actual para seguir construyéndola. Si se detecta un doble click, bastará con llamar al método `confirmShape`, para terminar la construcción de la figura.
+- **Selección de figuras.** Bastará con escuchar el evento `mouse clicked` cuando se está en modo edición, y ver si en la posición clicada hay alguna figura (esta funcionalidad la proporciona el método `contains` de `Shape`). En caso de estarlo, en su `BasicShapePainter` se activará su atributo de edición y se añadirá al vector de figuras seleccionadas.
+- **Modificación de atributos en las figuras seleccionadas.** Bastará con modificar los atributos en cada `BasicShapePainter` de cada forma en el vector de formas seleccionadas, actualizando con los valores deseados.
+- **Movimiento de las figuras seleccionadas.** Bastará con llamar al método `move` para cada figura en el vector de formas seleccionadas, donde el vector de traslación vendrá dado por la diferencia entre las posiciones del ratón en dos eventos `mouse dragged` consecutivos.
+- **Cambio de profundidad en las figuras seleccionadas.** La profundidad vendrá determinada por la posición el vector de formas, puesto que las figuras que se encuentran más atrás en el vector son las últimas en pintarse, y por tanto aparecerán por encima de las demás. Bastará con modificar las posiciones convenientemente.
+- **Modo regular.** El modo regular vendrá determinado por un valor booleano que se activará cuando se genera un evento `KeyPressed` activado por la tecla `SHIFT` y se desactivará cuando se genera un evento `KeyReleased` con esa misma tecla. Cuando este modo está activado, el punto sobre el que se mueve el ratón en los eventos `MouseDragged` se proyectará sobre la semirrecta vertical, horizontal o diagonal de 45º más cercana que arranque en el punto sobre el que se inició la construcción. Con el punto obtenido en la proyección, el procedimiento será igual que el seguido en la actualización de figuras. En la figura \ref{fig:regular_mode} se muestran los resultados de este modo de dibujo.
+
+\begin{figure}[h]
+\centering
+\includegraphics[height=5cm]{./images/regular_mode.png}
+\caption{Figuras dibujadas en modo regular.} \label{fig:regular_mode}
+\end{figure}
+
+Para concluir la sección de gráficos, se van a explicar brevemente los detalles de las subclases de formas desarrolladas, y los atributos manejados.
+
+**Trazo libre.** \raisebox{0mm}{\fbox{\includegraphics[width=4mm]{./images/punto.png}}}
+
+El trazo libre es la operación que permite dibujar de forma arbitraria según se va moviendo el ratón por el lienzo. Está implementado en la clase `JFreePath`. Esta clase extiende a la clase asbtracta también implementada, `JGeneralPath`, una `JShape` que extiende a la clase `Path2D` de Java y que implementa las funcionalidades de `JShape` comunes a todos los objetos del tipo `Path2D`, como es el caso del método `move`, el método `getPainter` y el método `paint`.
+
+El mecanismo de actualización se implementa en `JFreePath` y consiste en ir añadiendo en cada actualización una línea hacia el nuevo punto. Por tanto, el trazo libre está compuesto por una poligonal de líneas pequeñas que se irán uniendo consecutivamente conforme se mueve el ratón. Es una forma que se construye en un solo paso, por lo que no requiere de funcionalidades en los métodos `commitShape` y `confirmShape`.
+
+**Línea.** \raisebox{0mm}{\fbox{\includegraphics[width=4mm]{./images/linea.png}}}
+
+La clase `JLine` es la `JShape` que implementa las líneas. Extiende la clase `Line2D.Double de Java`. Se actualiza mediante el método `setLine` de su superclase. Sobreescribe, además, los métodos `contains`, de forma que permite que devuelvan `true` cuando el punto que recibe como argumento se encuentra a una distancia pequeña. De nuevo, es una forma que se construye en un solo paso.
+
+**Rectángulo.** \raisebox{0mm}{\fbox{\includegraphics[width=4mm]{./images/rectangulo.png}}} 
+
+La clase `JRectangle` es la `JShape` que implementa los rectángulos. Extiende la clase `Rectangle` de Java. Se actualiza mediante el método `setFrameFromDiagonal` de su superclase, el cual utiliza los puntos diagonales como argumentos, que son justo los que recibe `updateShape`. Esta clase es de gran utilidad en determinadas situaciones, por ejemplo, los rectángulos de selección se obtienen de esta clase, por lo que se han añadido algunos métodos que pueden resultar útiles, además de los ya implementados en su superclase. En estos métodos se destacan los métodos de acceso a las cuatro esquinas del rectángulo. También es una figura que se construye en un solo paso.
+
+**Rectángulo redondeado.** \raisebox{0mm}{\fbox{\includegraphics[width=4mm]{./images/round_rectangle.png}}}
+
+La clase `JRoundRectangle` es la `JShape` que implementa los rectángulos redondeados. Extiende la clase `RoundRectangle2D.Double`. El procedimiento de construcción es análogo al de rectángulo, con la única diferencia de los bordes curvados. En la construcción interactiva, se ha optado por establecer la anchura y altura de los arcos que determinan las esquinas como la cuarta parte de la anchura y altura del rectángulo, respectivamente. De esta forma, el procedimiento de construcción vuelve a ser de un solo paso.
+
+**Curva cuadrática.** \raisebox{0mm}{\fbox{\includegraphics[width=4mm]{./images/quad_curve.png}}}
+
+La clase `JQuadCurve` es la `JShape` que implementa las curvas cuadráticas o con un punto de control. Extiende la clase `QuadCurve2D.Double` de Java. En este caso, la figura requiere de una construcción en dos pasos:
+
+1. Se establece la recta que determinará la curva. La recta se va construyendo con los puntos inicial y final, y el punto de control se deja como punto medio de la curva.
+2. Se establece el punto de control, según la posición de arrastre recibida en el método `updateShape`.
+
+Para ambos pasos de construcción se utiliza el método `setCurve` de la superclase, por secciones. Primero, para establecer los puntos inicial y final, y después, para los puntos de control. El método `commitShape` subirá el paso de construcción y devolverá `true` al completar los dos pasos.
+
+**Curva cúbica.** \raisebox{0mm}{\fbox{\includegraphics[width=4mm]{./images/cubic_curve.png}}}
+
+La clase `JCubicCurve` es la `JShape` que implementa las curvas cúbicas o con dos puntos de control. Extiende la clase `CubicCurve2D.Double`. En este caso, la figura requiere de una construcción en tres pasos, y el procedimiento es idéntico al de la curva cuadrática, usando también el método `setCurve` de la superclase por secciones, con la única diferencia de que se establece un segundo punto de control adicional en el tercer paso.
+
+**Polígono.** \raisebox{0mm}{\fbox{\includegraphics[width=4mm]{./images/polygon.png}}}
+
+La clase `JPolygon` es la `JShape` que implementa los polígonos. Extiende la clase `JGeneralPath`. En este caso, a diferencia de con `JFreePath`, la figura se actualiza añadiendo una línea respecto a la posición del último vértice establecido en el polígono. La clase `Path2D` no permite el acceso a los distintos subcaminos que lo componen, por lo que la construcción interactiva del polígono se realiza con ayuda de un `JGeneralPath` auxiliar que permite fijar los primeros vértices del polígono y unirse al último vértice de forma no definitiva, pues se altera el camino auxiliar en lugar del polígono.
+
+En este caso, la figura se construye en un número indefinido de pasos. El método `commitShape` establecerá un nuevo último vértice en el polígono y en este caso devolverá siempre `false`. La finalización de la construcción habrá de realizarse con el método `confirmShape`, el cual unirá, además, el último vértice con el primero, utilizando la función `closePath` de la superclase.
+
+**Arco.** \raisebox{0mm}{\fbox{\includegraphics[width=4mm]{./images/arc.png}}}
+
+La clase `JArc` es la `JShape` que implementa los arcos. Extiende la clase `Arc2D.Double`. Un arco representa una parte de una elipse, y está definida por cuatro propiedades: el rectángulo envolvente, el ángulo de partida, el ángulo de extensión y el tipo de cierre (sin cierre, en forma de sector circular o en forma de segmento circular).
+
+Para dar la mayor versatilidad posible a la construcción de arcos, se ha optado por una construcción en tres pasos:
+
+1. Se establece el rectángulo envolvente a partir de la diagonal determinada por los puntos recibidos en `updateShape`. En este primer paso, el arco que se irá generando será media elipse colocada sobre un eje horizontal.
+2. Se gira la elipse según la posición del punto de movimiento indicada como argumento, para establecer el ángulo inicial. En este caso es necesario determinar un ángulo a partir de la posición recibida. Para que la elipse gire de forma adecuada respecto al punto indicado de movimiento, se ha utilizado la función arcotangente sobre el vector que une el centro del rectángulo envolvente y el punto de movimiento, pues la arcotangente del cociente de las componentes de un vector determina su ángulo de giro respecto a los ejes.
+3. Se tira de la elipse para obtener la extensión deseada. De nuevo la extensión está determinada por un ángulo, por lo que se utilizará el mismo procedimiento anterior para determinarlo a partir del punto de movimiento.
+
+El tipo de cierre durante la construcción interactiva será el cierre por defecto (sin cierre).
+
+**Área personalizada: sol.** \raisebox{0mm}{\fbox{\includegraphics[width=4mm]{./images/sun.png}}}
+
+La clase `JArea` es una clase abstracta que implementa `JShape` que extiende la clase `Area` de Java. Implementa las funcionalidades de `JShape` comunes a todas las áreas, como es el caso de `move`, `getEnclosingRectangle`, `paint` y `getPainter`.
+
+El área personalizada construida está definida en la clase `JSun`, que extiende a `JArea`. Esta clase dibuja una figura que representa un sol, como una estrella de 8 puntas, donde su centro es una elipse, y sus rayos son arcos. La construcción se realiza en un solo paso. Para la actualización interactiva, en primer lugar, se determina el rectángulo envolvente a partir de los puntos recibidos como argumento. La elipse que representa el centro del sol se construye dentro de la tercera parte del rectángulo envolvente, sobre el mismo centro. Una vez construida la elipse, se añaden los arcos, dividiendo la elipse en 8 partes iguales, colocando los puntos inicial y final de cada arco de forma consecutiva sobre dichos puntos, y colocando los puntos de control sobre las bisectrices de cada arco, a la altura del rectángulo envolvente. Las figuras se combinan gracias al método `add` de la superclase `Area`.
+
+En la figura \ref{fig:shapes} se muestran todas las figuras que permite construir la aplicación. En la figura \ref{fig:diag_clases} se muestra un diagrama de clases reducido con el diseño y jerarquías utilizados en las clases de formas.
+
+\begin{figure}[h]
+\centering
+\includegraphics[height=8cm]{./images/shapes.png}
+\caption{Figuras disponibles en la aplicación.} \label{fig:shapes}
+\end{figure}
+
+
+
+\begin{figure}[h]
+\centering
+\includegraphics{./images/diag_clases.png}
+\caption{Diagrama de clases utilizado en las clases de formas. Se muestran solo las clases del paquete sm.jlsd.graphics, junto con Canvas2D. Adicionalmente, cada clase que implementa JShape extiende a su clase correspondiente de Java. Se muestran solo algunas clases de figuras. El resto siguen la misma estructura que JEllipse o JRectangle. En las clases JGeneralPath y JArea se observa que siguen una jerarquía de herencias específica.} \label{fig:diag_clases}
+\end{figure}
+
+**Modo edición.** \raisebox{0mm}{\fbox{\includegraphics[width=4mm]{./images/seleccion.png}}}
+
+Como ya se ha indicado, el modo edición simplemente activa un valor booleano en el lienzo, mediante el cual cambia el comportamiento en los eventos de ratón, pasando de la creación y actualización de figuras, a la selección, movimiento y cambio de atributos de estas.
+
+**Color.** \raisebox{0mm}{\fbox{\includegraphics[width=4mm]{./images/palette.png}}}
+
+El color se maneja mediante dos listas desplegables de colores, que contienen unos colores predefinidos, pero a los que se puede añadir más a través de un diálogo. La clase `JColorChooser` de Java permite gestionar estos diálogos de color. El aspecto visual de las listas desplegables de color se ha realizado estableciendo como propiedad `renderer` de la lista desplegable un objeto de la clase `ColorListCellRenderer`. Esta clase es un `JPanel` que contiene un botón coloreado. Implementa la interfaz `ListCellRenderer`, y en el método `getListCellRendererComponent` establece el color del botón al color seleccionado en la lista. Esta clase está disponible en `sm.jlsd.ui`.
+
+La acción de las listas de color consiste en únicamente establecer el color del lienzo (o de las figuras seleccionadas) al valor indicado. La primera lista establecerá el color primario y la segunda establecerá el color secundario. Cada uno de estos colores modifica el trazo y relleno de la forma de acuerdo a lo especificado en los requisitos.
+
+**Trazo.** \raisebox{0mm}{\fbox{\includegraphics[width=4mm]{./images/stroke.png}}}
+
+El trazo queda definido por dos propiedades: el grosor y el tipo de trazo. El grosor se maneja en la interfaz mediante un `JSpinner`, desde el cual se establece el grosor de trazo en el lienzo o en las figuras seleccionadas. Para el tipo de trazo, se ha creado una clase `BasicStrokeType`, en `sm.jlsd.graphics`, que es un enumerado que define varios tipos de trazos. Dicho enumerado posee además la función `getStroke(int)`, que devuelve el objeto `Stroke` asociado ha dicho tipo de trazo, para el grosor deseado. Esto permite definir todos los tipos de trazos deseados de forma sencilla, sin más que especificar el patrón, la discontinuidad en los bordes y el tipo de unión en el método `getStroke` asociado a cada elemento del enumerado.
+
+Finalmente, gracias a la clase `BasicStrokeType` se puede construir de forma inmediata un renderizador que permite dibujar todos los tipos de trazo definidos en una lista. Esta funcionalidad se implementa en la clase `LineListCellRenderer`, un `JPanel` que implementa de nuevo `ListCellRenderer`, y en este caso según el tipo de trazo dibuja en el panel una línea con las discontinuidades deseadas. Este renderizador se ha asociado a una lista desplegable desde la cual se puede elegir (y previsualizar) el tipo de trazo deseado. En la figura \ref{fig:stroke} se muestran los tipos de trazo disponibles. Tanto el spinner de grosor como la lista desplegable se encuentran en una ventana flotante asociada al botón del trazo.
+
+\begin{figure}[h]
+\centering
+\includegraphics[height=5cm]{./images/stroke_type.png}
+\caption{Trazos disponibles en la aplicación} \label{fig:stroke}
+\end{figure}
+
+**Relleno.**
+
+Como ya se ha indicado, el relleno vendrá determinado por los colores primario y secundario. Adicionalmente, se necesita conocer el tipo de relleno a establecer. El tipo de relleno es un atributo entero disponible en la clase `BasicShapePainter` y cuyos valores pueden establecerse a partir de constantes estáticas definidas en esa misma clase. Los rellenos implementados son: sin relleno \raisebox{0mm}{\fbox{\includegraphics[width=4mm]{./images/no_fill.png}}}, un color liso \raisebox{0mm}{\fbox{\includegraphics[width=4mm]{./images/single_color.png}}}, gradientes vertical \raisebox{0mm}{\fbox{\includegraphics[width=4mm]{./images/vertical_gradient.png}}}, horizontal \raisebox{0mm}{\fbox{\includegraphics[width=4mm]{./images/horizontal_gradient.png}}} y diagonal \raisebox{0mm}{\fbox{\includegraphics[width=4mm]{./images/diagonal_main_gradient.png}}} \raisebox{0mm}{\fbox{\includegraphics[width=4mm]{./images/diagonal_second_gradient.png}}}, radial \raisebox{0mm}{\fbox{\includegraphics[width=4mm]{./images/equiradial_gradient.png}}} y una imagen de textura \raisebox{0mm}{\fbox{\includegraphics[width=4mm]{./images/basic_texture.png}}}.
+
+Para establecer los gradientes de color se crean objetos del tipo `GradientPaint` con los colores primario y secundario, y utilizando como puntos las esquinas del rectángulo que envuelve la figura. De esta forma, eligiendo las esquinas convenientes obtenemos de forma sencilla los gradientes vertical, horizontal y diagonales. Para el gradiente radial se crea un objeto `RadialGradientPaint` que toma como centro el centro del rectángulo envolvente, un radio y unas fracciones de color prefijadas, y de nuevo los colores primario y secundario. Para el caso de la imagen de textura se crea un objeto `TexturePaint` con una imagen que se almacena en una variable estática, de forma que solo es leída una vez en el programa. Dicha imagen está incorporada en la biblioteca.
+
+En la figura \ref{fig:fill} se muestran los rellenos incorporados.
+
+\begin{figure}[h]
+\centering
+\includegraphics[height=8cm]{./images/fill_types.png}
+\caption{Rellenos disponibles en la aplicación} \label{fig:fill}
+\end{figure}
+
+**Transparencias.** \raisebox{0mm}{\fbox{\includegraphics[width=4mm]{./images/transparencia.png}}}
+
+Las transparencias se manejan mediante un deslizador incluido en la ventana flotante asociada al botón de transparencias. La modificación del deslizador cambiará el nivel de transparencia en el lienzo, o en las figuras seleccionadas. La transparencia se controla creando instancias de la clase `AlphaComposite`.
+
+**Transformaciones.** \raisebox{0mm}{\fbox{\includegraphics[width=4mm]{./images/transform.png}}}
+
+El botón asociado a las transformaciones incluye una ventana flotante con dos deslizadores. Uno para el nivel de giro y otro para el nivel de escalado. Ambas operaciones toman como centro el centro del rectángulo envolvente, y por tanto son conmutativos. Para crear el objeto  `AffineTransform` adecuado, primero se establece como la identidad, después se traslada en la dirección del vector del centro del rectángulo envolvente, se aplican la rotación y el escalado, y se vuelve a trasladar en la dirección opuesta.
+
+**Alisado de bordes.** \raisebox{0mm}{\fbox{\includegraphics[width=4mm]{./images/alisar.png}}}
+
+El alisado de bordes se puede activar o desactivar. La activación consistirá en la aplicación a los gráficos que dibujan las formas un objeto `RenderingHits` donde la clave `ANTIALIAS` toma el valor `ON`.
+
+**Cambio de posición de las figuras.**
+
+Como ya se ha mencionado previamente, la aplicación permite enviar al fondo \raisebox{0mm}{\fbox{\includegraphics[width=4mm]{./images/to_bottom.png}}}, al frente \raisebox{0mm}{\fbox{\includegraphics[width=4mm]{./images/to_top.png}}} o una posición hacia atrás \raisebox{0mm}{\fbox{\includegraphics[width=4mm]{./images/send_back.png}}} o hacia delante \raisebox{0mm}{\fbox{\includegraphics[width=4mm]{./images/bring_forward.png}}} las distintas figuras en el lienzo. Para esto basta con intercambiar posiciones en el vector de figuras, bien con la siguiente en la lista, con la anterior, con la primera o con la última.
+
+## Módulo de imágenes
+
+El módulo de imágenes continúa trabajando sobre un lienzo, al que se añade una imagen que se puede visualizar como fondo. Para ello, se ha construido la clase `Canvas2DImage`, que extiende a `Canvas2D`, añadiendo un atributo `BufferedImage`, que es la imagen con la que trabajará la aplicación. Esta clase está disponible en `sm.jlsd.ui` y añade métodos para establecer una imagen, o para recuperarla, bien con el el vector de figuras, para guardarla en un fichero, o bien únicamente la imagen, para procesarla mediante distintas operaciones.
+
+Estas imágenes podrán guardarse en ficheros. Para ello, como ya se mencionó en la sección de filtros, se utilizará un filtro de imagen, disponible mediante el método `getWriterFormatNames` de `ImageIO`. Se permitirá guardar los ficheros en cualquier extensión que sea admitida por esta clase.
+
+El resto de elementos de este módulo se corresponde a las distintas operaciones de imágenes a desarrollar, que se analizarán en las siguientes páginas.
+
+**Brillo.** \raisebox{0mm}{\fbox{\includegraphics[width=4mm]{./images/brightness.png}}}
+
+La aplicación permite cambiar la iluminación de la imagen mediante un deslizador. Para el cambio de brillo se utilizará la clase `RescaleOp` de Java, la cual permite realizar una operación en cada componente dada por $x_i \mapsto a_ix_i+b_i$. En nuestro caso, estableceremos $a_i=1$ en todos los canales, y $b_i$ será el valor que nos proporcione el deslizador, que también estableceremos en todos los canales, salvo que la imagen tenga canal alfa. En tal caso, sobre el canal alfa no haremos ninguna modificación, pues se perdería el efecto de brillo al variar el nivel de transparencia.
+
+Para hacer un uso correcto del deslizador, el deslizador estará aplicando la transformación siempre sobre la misma imagen: la obtenida en el momento en el que se pulsa el botón asociado al deslizador y se muestra la ventana flotante con dicho deslizador. De esta forma, el valor $b$ que se suma irá cambiando de acuerdo a los valores de la imagen original, y no irá sumándose a las distintas transformaciones de la imagen, lo que no tendría el efecto buscado con del deslizador. La imagen original permanece almacenada mientras esté abierta la ventana del deslizador. Una vez, se pulse de nuevo el botón asociado al deslizador, la imagen transformada quedará guardada en el lienzo. Aunque en adelante no se especifique, __todos los deslizadores utilizados en las operaciones sobre imágenes presentarán este comportamiento__, es decir, utilizarán sus valores para transformar la imagen inicial, hasta que sus ventanas se cierren.
+
+**Contraste.**
+
+Los contrastes normal \raisebox{0mm}{\fbox{\includegraphics[width=4mm]{./images/contraste.png}}}, iluminado \raisebox{0mm}{\fbox{\includegraphics[width=4mm]{./images/iluminar.png}}} y oscurecido \raisebox{0mm}{\fbox{\includegraphics[width=4mm]{./images/oscurecer.png}}} se aplican utilizando la clase `LookupOp` de Java. Para cada caso se han utilizado tablas de búsqueda asociadas a las funciones S, logaritmo y potencia, con los valores establecidos por defecto en la clase `LookupTableProducer` de `sm.image`. Los contrastes pueden elegirse en una lista desplegable dentro de la interfaz.
+
+En esta lista se incluye además la operación negativo \raisebox{0mm}{\fbox{\includegraphics[width=4mm]{./images/negativo.png}}}, que utiliza una tabla de búsqueda asociada a la función $x \mapsto 255 -x$. También se ha tomado la tabla asociada de la biblioteca `sm.image`.
+
+**Filtros de convolución.**
+
+Para los filtros de convolución se ha utilizado la clase `ConvolveOp` de Java. Para aplicar esta operación a una imagen, es necesario definir el núcleo de convolución adecuado. Para los filtros media `3x3`, binomial, de enfoque, relieve y laplaciano se ha utilizado la función `createKernel` de `KernelProducer`. Adicionalmente, se ha añadido la clase `JKernelProducer` al paquete `sm.jlsd.image` que permite crear nuevos núcleos. Concretamente, dicha clase presenta la función `createAverageKernel(int,int)`, que permite crear núcleos de convolución de tipo media para cualquier número de filas y columnas (se construirá una matriz de $n$ filas y $m$ columnas con todos sus valores a $1/nm$).
+
+**Tintado.** \raisebox{0mm}{\fbox{\includegraphics[width=4mm]{./images/tintar.png}}}
+
+Para realizar el tintado se ha utilizado un deslizador, que permite determinar el nivel de tintado. También, se tomará el color primario de la lista desplegable para realizar el tintado con el color que se desee. La operación se ha realizado utilizando la clase `TintOp` del paquete `sm.image`. En la construcción de este operador se han utilizado como argumentos el color primario ya indicado, y el valor obtenido en el deslizador. Recordemos que si $C$ es el vector RGB de tintado, $P$ es el vector RGB de un píxel y $\alpha \in [0,1]$ es el valor obtenido del deslizador, se tiene que el tintado del píxel $P$ viene dado por la combinación convexa $\alpha C + (1-\alpha) P$. 
+
+**Umbralización.** \raisebox{0mm}{\fbox{\includegraphics[width=4mm]{./images/threshold.png}}}
+
+Para realizar la umbralización se ha creado una nueva clase `UmbralizacionOp`, que extiende la clase `BufferedImageOpAdapter`, y que se encuentra en el paquete `sm.jlsd.image`. Esta umbralización requiere de nuevo un color, obtenido de la lista del color primario, y un valor umbral obtenido mediante deslizador. La operación `filter` de `UmbralizacionOp` tomará la imagen fuente, y para cada pixel considerará la intensidad media `(R + G + B)/3`. Si dicha intensidad supera el umbral, el píxel se establecerá blanco. En caso contrario, el píxel se establecerá con el color que se haya indicado.
+
+**Eliminación de fondo (operación propia).** \raisebox{0mm}{\fbox{\includegraphics[width=4mm]{./images/background_remove.png}}}
+
+La eliminación de fondo es una operación muy útil, y ofrecida en numerosos programas de tratamiento de imágenes, que permite quitar el color de fondo de una imagen y hacerlo transparente, de forma que pueda añadirse sobre distintos medios visuales manteniendo el color presente en dicho medio. En la aplicación se ha optado por implementar esta operación, de forma que permite tomar un color, obtenido de la lista del color primario, y un valor de tolerancia, obtenido mediante un deslizador, y hacer transparentes los píxeles que tengan un color lo suficientemente cercano al color elegido, para el nivel de tolerancia dado. El nivel de tolerancia se ha medido utilizando la distancia del máximo, para los píxeles en formato RGB. Es decir, si el nivel de tolerancia viene dado por $\varepsilon$, se considerará que el píxel $P = [P_r,P_g,P_b]$ es cercano al color elegido $C = [C_r,C_g,C_b]$, si
+
+\[ d(P,C) = \max\{|P_r-C_r|,|P_g-C_g|,|P_b-C_b|\} < \varepsilon.  \]
+
+Esta operación se ha implementado en la clase `BackgroundRemoveOp`, disponible en `sm.jlsd.image`, que extiende la clase `BufferedImageOpAdapter`. Admite como parámetros la tolerancia y el color ya indicados y su método `filter` transforma la imagen fuente en una nueva imagen del tipo ARGB, donde los píxeles que cumplen la condición de distancia anterior son convertidos a transparente (es decir, su valor $\alpha$ será 0), manteniendo el resto de píxeles igual. Es una operación \emph{píxel a píxel}.
+
+La figura \ref{fig:ex:background_remove} muestra un ejemplo de cómo el operador de eliminación de fondo afecta a una imagen.
+
+\begin{figure}[h]
+\centering
+\includegraphics[height=8cm]{./images/ex_background_remove.png}
+\caption{Resultado de la aplicación de la eliminación de fondo a la imagen AlhambraNoche para el color negro y un nivel de tolerancia de en torno al 10 \%} \label{fig:ex:background_remove}
+\end{figure}
+
+**Efecto seno.** \raisebox{0mm}{\fbox{\includegraphics[width=4mm]{./images/sinusoidal.png}}}
+
+La operación seno aplica a cada componente la función seno, normalizada convenientemente para que tome valores entre 0 y 255. Para realizar esta operación, se ha utilizado de nuevo la clase `LookupOp` de Java. En este caso, se ha utilizado una `LookupTable` propia que construye la tabla de la función seno. Para ello, se ha creado la clase `JLookupTableProducer`, disponible en el paquete `sm.jlsd.image`, y que contiene funciones para crear distintos tipos de tablas. Una de ellas es la de la función seno. Admite como parámetro una frecuencia de onda $w$. La transformación que se aplica en la creación de la tabla, para cada `i` entre `0` y `255`, es:
+
+`lt[i] = (byte)(K*Math.sin(Math.toRadians(w*i/255.0)))`
+
+El valor de `K` viene dado en este caso por `255`, pues la función seno alcanza su máximo en 1. El efecto producido por esta operación es difícil de predecir, pues depende en gran medida de `w`, el cual puede determinar ondas muy diferentes que cambian en gran medida los valores que se aplican a los píxeles. En la aplicación se ha establecido un valor de `w` fijo de `180.0`.
+
+**Efecto sepia.** \raisebox{0mm}{\fbox{\includegraphics[width=4mm]{./images/sepia.png}}}
+
+La operación sepia ha sido implementada mediante una nueva clase, `SepiaOp`, definida en el paquete `sm.jlsd.image`. Esta clase es de nuevo una `BufferedImageOpAdapter`, que no requiere argumentos, y que en su método `filter` recorre la imagen fuente píxel a píxel para establecer los valores de los píxels de la imagen destino. Los píxels se establecen de acuerdo con la siguiente formulación:
+
+\begin{align*}
+ R' &= \min\{255,0,393R + 0,769G + 0,189B\} \\
+ G' &= \min\{255,0,349R + 0,686G + 0,168B\} \\
+ B' &= \min\{255,0,272R + 0,534G + 0,131B\}
+\end{align*}
+
+**Ecualización.** \raisebox{0mm}{\fbox{\includegraphics[width=4mm]{./images/ecualizar.png}}}
+
+La ecualización permite modificar la distribución de las intensidades de cada componente de los píxels, de forma que su histograma se presente más uniformizado. La operación de ecualización se ha realizado a través de la clase `EqualizationOp` disponible en el paquete `sm.image`. La operación implementada ha utilizado el constructor sin argumentos, aplicando así la ecualización a todas las bandas.
+
+**Histograma.** \raisebox{0mm}{\fbox{\includegraphics[width=4mm]{./images/histogram.png}}}
+
+Se ha implementado la posibilidad de ofrecer el histograma de una imagen dada. Para ello, se ha utilizado la clase `Histogram` del paquete `sm.image`, que calcula dicho histograma. Este histograma permite obtener una matriz de datos normalizados, donde el primer índice de la matriz representa cada banda de la imagen, y el segundo índice las frecuencias de cada valor de intensidad dentro de esa banda.
+
+Basándonos en dicha matriz, se ha creado la clase `HistogramPanel`, un `JPanel` disponible en el paquete `sm.jlsd.ui`, y que proporciona los recursos gráficos para dibujar el histograma con el que es construido. El dibujo del histograma se realiza en el método `paintComponent` y se dibuja uno por banda, con diferentes colores por banda. Las barras del histograma se dibujan mediante rectángulos de igual anchura, donde las alturas vienen dadas por el valor del histograma asociado a dicho rectángulo.
+
+En la figura \ref{fig:ex:equalization} se muestra una imagen sin ecualizar, junto con su histograma, seguido de la misma imagen ecualizada, con su nuevo histograma.
+
+\begin{figure}[h]
+\centering
+\includegraphics[height=8cm]{./images/ex_equalization.png}
+\caption{Resultado de la aplicación de la ecualización junto con los histogramas obtenidos.} \label{fig:ex:equalization}
+\end{figure}
+
+**Detector de fronteras Sobel.** \raisebox{0mm}{\fbox{\includegraphics[width=4mm]{./images/gradient.png}}}
+
+La operación Sobel permite detectar fronteras, transformando la imagen en una nueva imagen en blanco y negro con los bordes marcados. Para esta operación se ha creado la clase `SobelOp` en el paquete `sm.jlsd.image`. Es de nuevo una `BufferedImageOpAdapter`. En el método `filter`, en primer lugar, se convoluciona la imagen con los dos núcleos de convolución que definen el operador (componentes X e Y). Estos núcleos se han tomado de la clase `KernelProducer` de la librería `sm.image`. Una vez realizadas las convoluciones obtenemos dos nuevas imágenes. Para cada píxel, tomamos la componente `x` del gradiente como la suma de los valores en las bandas de la imagen de la convolución `X`, y realizamos lo mismo con la imagen `Y` para obtener la segunda componente del vector gradiente. Finalmente, el módulo de dicho vector gradiente, truncado entre 0 y 255, nos dará el valor de gris que mostrará la imagen de detección de fronteras.
+
+La figura \ref{fig:ex:sobel} muestra una comparativa del detector Sobel frente al filtro laplaciano, sobre una misma imagen.
+
+\begin{figure}[h]
+\centering
+\includegraphics[height=8cm]{./images/ex_sobel.png}
+\caption{A la izquierda, la imagen original. En el centro, la imagen tras aplicar el detector Sobel. A la derecha, la imagen tras aplicar el filtro laplaciano.} \label{fig:ex:sobel}
+\end{figure}
+
+**Efecto arcotangente (operación propia).** \raisebox{0mm}{\fbox{\includegraphics[width=4mm]{./images/atan.png}}}
+
+Se ha implementado una operación Lookup basada en la función arcotangente. La función arcotangente es toma valores en toda la recta real y es estrictamente creciente, tomando valores entre $-\pi/2$ y $\pi/2$. La pendiente es suave hasta que se acerca al valor 0, donde la función crece de forma más rápida. La función, además, es simétrica impar. Por ello, nos interesará más tomar la arcotangente trasladada, de forma que el centro de simetría quede en la mitad del intervalo $[0,255]$. En la figura \ref{fig:graf:atan} se muestra la gráfica de esta función.
+
+\begin{figure}[h]
+\centering
+\includegraphics[height=8cm]{./images/graf_atan.png}
+\caption{Gráfica de la función arcotangente (trasladada para ser simétrica entre 0 y 255).} \label{fig:graf:atan}
+\end{figure}
+
+Una vez determinada la función, pretendemos normalizarla para que tome valores entre 0 y 255. Esto se consigue de forma sencilla, aplicando al resultado $f(x)$ de la operación anterior (tendríamos $f(x) = \arctan(x-128))$, la normalización $255*(f(x) - min)/(max - min)$, donde $max = f(255)$ y $min = f(0)$. Así conseguimos una función creciente entre 0 y 255. La clase `JLookupTableProducer` proporciona una función para crear la tabla de búsqueda de la arcotangente. En ellas, las imágenes de cada posible valor `i` entre 0 y 255 vendrían dados por la siguiente relación:
+
+`lt[i] = (byte)(K*Math.atan(i-128.0)-min)`,
+
+donde `K = 255.0/(max-min)`. Por último, si volvemos a observar la gráfica de la función podemos intuir que en cuanto las componentes se encuentran ligeramente alejadas del centro de simetría (en este caso el 128), al aplicarse la arcotangente o bien van a aumentar mucho, acercándose bastante a la máxima intensidad (si superan el 128), o bien van a disminuir mucho, acercándose a la mínima intensidad (si son inferiores al 128). Por tanto, se puede concluir que el efecto que produce es un efecto de contraste, posiblemente más marcado que el contraste que se obtiene mediante las funciones normalmente utilizadas. Esto puede corroborarse en la figura \ref{fig:ex:atan}, donde se observa la aplicación de este efecto a una imagen concreta.
+
+\begin{figure}[h]
+\centering
+\includegraphics[height=8cm]{./images/ex_atan.png}
+\caption{Aplicación del efecto arcotangente a una imagen concreta.} \label{fig:ex:atan}
+\end{figure}
+
+**Efecto campana de Gauss (operación propia).** \raisebox{0mm}{\fbox{\includegraphics[width=4mm]{./images/gauss}}}
+
+El efecto campana de Gauss es otra operación Lookup basada en la función gaussiana, $G(x) = e^{-\alpha x^2}$. En este caso se trata de una función simétrica par, que, al igual que en el caso anterior, la trasladaremos para que sea simétrica en el intervalo $[0,255]$. La función describe una forma de campana como la que se muestra en la figura \ref{fig:graf:gauss}.
+
+\begin{figure}[h]
+\centering
+\includegraphics[height=8cm]{./images/graf_gauss.png}
+\caption{Gráfica de la campana de Gauss (trasladada para ser simétrica entre 0 y 255).} \label{fig:graf:gauss}
+\end{figure}
+
+La constante $\alpha$ anterior determina la anchura de la campana de Gauss. Como la campana de Gauss sin parámetros toma la mayoría de sus valores altos entre -1 y 1, en la implementación se ha optado por implícitamente dividir el exponente entre $128^2$, de forma que el comportamiento de la función implementada entre 0 y 255 para un parámetro $\alpha$ tenga el mismo comportamiento que gaussiana $e^{-\alpha x^2}$, para el mismo valor de $\alpha$. En este caso, para cada valor `i` el resultado almacenado en la tabla de búsqueda vendrá dado por
+
+`lt[i] = (byte)(K*(Math.exp(-alpha/(128.0*128.0)*(i-128-0)*(i-128.0))-min))`,
+
+donde `K = 255.0/(max - min)`, `max = 1.0` y `min = f(128.0)`, pues la función alcanza su mínimo en los extremos. Observando la gráfica, observamos que esta operación potenciará las componentes con intensidades medias, mientras que tanto los colores muy intensos como los poco intensos tenderán a desaparecer. El efecto por tanto, puede ser, al igual que en la operación seno, un cambio de colores difícil de predecir, y que vendrá determinado por el valor de $\alpha$. La función que crea la tabla de búsqueda para esta función está disponible en el paquete `sm.jlsd.image`. La aplicación ofrece esta funcionalidad para un valor $\alpha$ fijo de 10. En la figura \ref{fig:ex:gauss} se muestra cómo queda una determinada imagen tras aplicar este efecto.
+
+\begin{figure}[h]
+\centering
+\includegraphics[height=8cm]{./images/ex_gauss.png}
+\caption{Aplicación del efecto campana de Gauss a una imagen concreta.} \label{fig:ex:gauss}
+\end{figure}
+
+**Traslación modular (operación propia).** \raisebox{0mm}{\fbox{\includegraphics[width=4mm]{./images/modular_translation.png}}}
+
+La operación traslación modular diseñada es una operación que se aplica componente a componente. Está disponible en el paquete `sm.jlsd.image`, en la clase `ModularTranslateOp`, que extiende a `BufferedImageOp`. La operación requiere un parámetro de traslación, que se obtiene a través de un deslizador en la interfaz gráfica. La finalidad de esta operación es similar a la buscada mediante la operación de brillo (que aplicaba una transformación del tipo $x \mapsto x+b$), solo que en este caso se pretende que los valores de las componentes se muevan cíclicamente, es decir, cuando alcancen su valor máximo, que empiecen a contar desde 0. La operación matemática implementada, para cada componente $c$, es
+
+\[ f(c) = (c + T) \mod 255,  \]
+
+donde $T$ es el parámetro de traslación obtenido mediante el deslizador. El efecto esperado combina la iluminación esperada mediante el efecto del brillo, junto con cambios de color sorprendentes que proporcionan otra naturaleza de colores distinta a la imagen, conforme se va moviendo el deslizador. El efecto puede ser más sorprendente cuando las imágenes son muy coloridas. En la figura \ref{fig:ex:mod_trans} se muestra el resultado de aplicar la traslación modular a una imagen concreta.
+
+\begin{figure}[h]
+\centering
+\includegraphics[height=8cm]{./images/ex_mod_trans.png}
+\caption{Aplicación de la traslación modular a una imagen concreta (para un valor de traslación de en torno al 20 \% de la longitud del deslizador.)} \label{fig:ex:mod_trans}
+\end{figure}
+
+**Efectos fuego y frío (operaciones propias).** \raisebox{0mm}{\fbox{\includegraphics[width=4mm]{./images/fire.png}}} \raisebox{0mm}{\fbox{\includegraphics[width=4mm]{./images/cold.png}}}
+
+Los efectos fuego y frío son operaciones propias que transforman los colores de una imagen dejando solo colores cálidos o fríos. Ambas implementaciones están disponibles en el paquete `sm.jlsd.image`, en las clases `FireEffectOp` y `ColdEffectOp`, respectivamente. Ambas son operaciones que iteran píxel a píxel y ambas clases extienden a `BufferedImageOpAdapter`.
+
+El efecto fuego trata de dar mayor peso en la imagen a los colores cálidos, eliminando de la imagen los colores fríos. De esta forma, para cada píxel RGB a escribir, se tomará como valor de la componente azul directamente 0, eliminando así los colores fríos. El color rojo se obtendrá de a partir de los tres valores RGB de la imagen fuente, dando más ponderación al rojo. El píxel verde permitirá contribuir a dar un toque más amarillento a la imagen. Para ello, tomará una combinación lineal de los píxeles azul y verde. Una mayor cantidad de estos colores dará una tonalidad menos roja y más amarillenta en esas zonas. Todos los valores se truncan a 255 si llegan a superar dicho valor. Concretamente, las fórmulas utilizadas para la obtención de los nuevos píxels $[R',G',B']$ a partir de los píxels de la imagen fuente $[R,G,B]$ son:
+
+\begin{align*}
+ R' &= \min\{255, R + 0,666G + 0,666B\} \\
+ G' &= \min\{255,  0,537G + 0,461B\} \\
+ B' &= 0
+\end{align*}
+
+El efecto frío sigue el mismo razonamiento, pero intercambiando los papeles de rojo y azul. Las fórmulas utilizadas para la obtención de los nuevos píxels son:
+
+\begin{align*}
+ R' &= 0 \\
+ G' &= \min\{255, 0,461R + 0,537G \} \\
+ B' &= \min\{255, 0,666R + 0,666G + B\}
+\end{align*}
+
+Las figuras \ref{fig:ex:fire} y \ref{fig:ex:cold} muestran ejemplos de la aplicación de los efectos fuego y frío, respectivamente.
+
+\begin{figure}[h]
+\centering
+\includegraphics[height=8cm]{./images/ex_fire.png}
+\caption{Aplicación del efecto fuego a una imagen concreta.} \label{fig:ex:fire}
+\end{figure}
+
+\begin{figure}[h]
+\centering
+\includegraphics[height=8cm]{./images/ex_cold.png}
+\caption{Aplicación del efecto frío a una imagen concreta.} \label{fig:ex:cold}
+\end{figure}
+
+**Obtención de ventanas de bandas.** \raisebox{0mm}{\fbox{\includegraphics[width=4mm]{./images/bandas.png}}}
+
+La obtención de bandas consiste en, para una imagen en un determinado espacio de color, para cada banda de dicho espacio, obtener la sección de la imagen que corresponde a dicha banda. Cada imagen de banda se abrirá en una nueva ventana, y estará en un espacio de grises, puesto que solo contiene la componente de la banda a la que pertenece. Además, otra de las finalidades de este procedimiento es la de poder mantener las relaciones entre las distintas bandas y la original, de forma que las modificaciones en alguna de ellas se apliquen también en todas las demás.
+
+De esta forma, en la clase `ImageUtils` del paquete `sm.jlsd.utils`, se proporciona la función `getBand(BufferedImage,int)`, que acepta una imagen y un entero asociado a un número de banda, y devuelve la imagen con la banda asociada. En esta función se crea una nueva imagen en el espacio de grises, como ya se ha comentado, y se establecerá como raster el obtenido mediante método `getWritableChild` del raster de la imagen fuente. Con este raster ambas imágenes compartirán la banda seleccionada.
+
+La ejecución de este procedimiento para cada banda de la imagen fuente, y la inclusión de cada imagen en una nueva ventana es la funcionalidad desarrollada en la aplicación a través del botón de bandas.
+
+**Cambio de espacios de color.**
+
+La aplicación permite cambiar el espacio de color de las imágenes con las que trabaja, a través de una lista desplegable, que contiene tres espacios de color distintos: RGB (el espacio de tres colores más común), GRAY (imágenes de grises) e YCC. Para ello, se ha utilizado la clase `ColorConvertOp` de Java, la cual permite convertir las imágenes al espacio de color deseado, pasándoselo como argumento. Para obtener los distintos espacios de color disponibles, se ha utilizado la función estática `getInstance` de la clase `ColorSpace` de Java, salvo para el espacio de grises, donde se ha utilizado la clase `GreyColorSpace`, de la biblioteca `sm.image`.
+
+**Giros.** \raisebox{0mm}{\fbox{\includegraphics[width=4mm]{./images/rotate.png}}} \raisebox{0mm}{\fbox{\includegraphics[width=4mm]{./images/rotate_exact.png}}}
+
+La aplicación permite rotar las imágenes un ángulo arbitrario mediante un deslizador, o cantidades exactas de 90, 180 y 270 grados, mediante botones. En cualquiera de los casos el procedimiento es el mismo, y requiere el ángulo de rotación como argumento. Para su realización se ha utilizado la clase `AffineTransformOp` de Java, a la que se le ha pasado como argumento la transformación afín deseada: un giro con el ángulo indicado y con centro el centro del rectángulo de la imagen. Esta transformación se puede obtener de forma sencilla gracias al método estático `getRotateInstance` de la clase `AffineTransform`.
+
+**Escalados.** \raisebox{0mm}{\fbox{\includegraphics[width=4mm]{./images/aumentar.png}}} \raisebox{0mm}{\fbox{\includegraphics[width=4mm]{./images/disminuir.png}}}
+
+La aplicación permitirá aumentar o reducir mediante botones las imágenes un 25 \% cada vez que se pulsen dichos botones. El procedimiento es análogo al caso de las rotaciones, y requiere el factor de escala (0.75 o 1.25) como argumento. De nuevo se realizan mediante la clase `AffineTransformOp`, y en este caso la transformación se obtiene mediante el método `getScaleInstance`, a la que se pasa como argumento la escala (la misma tanto en dirección vertical como horizontal).
+
+La aplicación también permite el cambio de tamaño de la imagen en el menú de imagen. En dicho menú se da la opción de redimensionar o de escalar. En este caso, en vez de aplicar transformaciones, se utilizan directamente los gráficos del objeto `BufferedImage`, para dibujar en ellos una nueva imagen que mantenga las proporciones de la original (en este caso, se trataría de una redimensión), o una nueva imagen con las nuevas proporciones (en este caso, la imagen escalaría automáticamente).
+
+**Mezcla de imágenes.** \raisebox{0mm}{\fbox{\includegraphics[width=4mm]{./images/plus.png}}}
+
+Para mezclar las imágenes se ha utilizado la clase `BlendOp` disponible en la biblioteca `sm.image`. La mezcla consiste combinar dos los píxeles de dos imágenes  mediante la fórmula $f(x,y) = (1-\alpha)x+\alpha y$, donde $x$ e $y$ representan los píxeles en cada una de las imágenes, y $\alpha \in [0,1]$ es el grado de mezcla, elegido mediante un deslizador.
+
+Al pulsar el botón de mezclado, se generará una nueva ventana que combinará las imágenes de las dos ventanas abiertas más recientes. La mezcla inicial se hará para $\alpha=1/2$ (una suma). A partir de ese momento, con el deslizador se podrá definir el grado de mezcla deseado. Las imágenes de ambas ventanas quedan almacenadas en variables cuando se pulsa el botón de mezcla y son las utilizadas por el filtro de `BlendOp` (una de ellas se pasa como sumando en el constructor y la otra se pasa como argumento en el método `filter`, al igual que se hace en el resto de operaciones). Las imágenes se liberan una vez se cierra la ventana del deslizador, como ocurre con el resto de operaciones de deslizador.
+
+**Diferencia de imágenes.** \raisebox{0mm}{\fbox{\includegraphics[width=4mm]{./images/minus.png}}}
+
+La diferencia de imágenes se ha implementado utilizando la clase `SubstractionOp`, disponible en la biblioteca `sm.image`. Esta operación calcula las diferencias entre cada píxel de una imagen, truncándolas a 0 si el resultado fuese negativo. En este caso no hay parámetros (a parte de una de las imágenes pasada como argumento en el constructor por tratarse de una operación binaria). De nuevo se tomarán las imágenes de las dos ventanas más recientes para la operación.
+
+**Producto de imágenes.** \raisebox{0mm}{\fbox{\includegraphics[width=4mm]{./images/product.png}}}
+
+El producto de imágenes es un procedimiento análogo a la diferencia, en el que solo cambia el tipo de operación. En este caso se ha desarrollado la clase `ProductOp`, en el paquete `sm.jlsd.image`, que extiende a la clase `BinaryOp` de `sm.image`. La clase `BinaryOp`. `BinaryOp` es a su vez una `BufferedImageOp`, que implementa un método `filter` por defecto que combina automáticamente las dos imágenes que se utilizan en la operación binaria. Las imágenes se combinan utilizando el método `binaryOp(int,int)`, que es abstracto en `BinaryOp`, y por tanto hay que implementar. Esta implementación, para el caso del producto, consiste simplemente en multiplicar los dos enteros que recibe como argumento, truncándolos a 255 en caso de que se superase dicho valor. La implementación de dicho método concluye el desarrollo de esta operación, que tampoco requiere de argumentos adicionales, más allá de las dos imágenes a combinar.
+
+Para finalizar con este módulo de imágenes, en la figura \ref{fig:resumen_efectos} se muestran algunos casos particulares de algunas de las operaciones implementadas.
+
+\begin{figure}[h]
+\centering
+\includegraphics{./images/resumen_efectos.png}
+\caption{Ejemplificación de algunos de los efectos implementados. En la primera fila: imagen original, imagen tintada de verde, imagen umbralizada e imagen con efecto seno. En la segunda fila: efecto sepia, imagen rotada 180º, imagen convertida a espacio de grises, e imagen tras aumentar el brillo en su banda azul. En la última fila se muestra la mezcla de dos imágenes.} \label{fig:resumen_efectos}
+\end{figure}
+
+## Módulos de audio y vídeo
+
+Para la gestión de sonidos y vídeos se han utilizado las herramientas proporcionadas por la biblioteca `VLCj`. Este módulo está diseñado de forma que el usuario puede añadir los archivos de audio y vídeo que desee a la lista de reproducción. Una vez los archivos están añadidos ha dicha lista, el usuario podrá seleccionar el archivo que desee y reproducirlo pulsando el botón de Play. Si el archivo es de sonido comenzará la reproducción y no se mostrará nada más. En cambio, si el archivo es de vídeo, se abrirá una nueva ventana en la que se empezará a mostrar el contenido del vídeo. En caso de que ya hubiera una ventana de vídeo abierta reproduciendo ese archivo, se reanudará la reproducción en dicha ventana. Mientras se reproduce un archivo se activará el botón de Pausa, desapareciendo el botón de Play, hasta que se pare la canción o hasta que esta termine. También, durante la reproducción del archivo, estará disponible una barra deslizadora que llevará la cuenta del progreso del archivo. Dicha barra estará acompañada por el tiempo actual del sonido o vídeo en curso y su duración total. El usuario podrá desplacar dicho deslizador para mover el sonido o vídeo a otro punto en el tiempo. A continuación se describen los aspectos más destacados del diseño de cada una de estas operaciones.
+
+**Agregación de archivos a la lista de reproducción.** La agregación de archivos a la lista de reproducción se realizará mediante el menú abrir. Los filtros ya comentados se encargarán de determinar si el archivo que se pretende abrir es de audio o vídeo. En tal caso, el sonido o vídeo será añadido a la lista de reproducción. En dicha lista se mostrará el nombre del archivo. Para simplificar este proceso (en una situación normal mostraría el resultado aplicar el método `toString` al archivo), se construye un nuevo archivo a partir del archivo obtenido por el diálogo de selección de archivos, que sobreescribe el método `toString` para que muestre el nombre del archivo, en lugar de la implementación por defecto.
+
+**Reproducción / pausa. ** \raisebox{0mm}{\fbox{\includegraphics[width=4mm]{./images/play.png}}} \raisebox{0mm}{\fbox{\includegraphics[width=4mm]{./images/pausa.png}}} 
+
+La reproducción o pausa de archivos se controla mediante un único botón, que cambiará de aspecto según se esté reproduciendo o no el archivo. Toda la gestión de estos elementos se hará a través de ventanas VLC.
+
+Las ventanas VLC son ventanas disponibles en la aplicación (clas `VLCWindow`) que permitirán la reproducción de sonidos y vídeo. Dicha ventana dispondrá de un reproductor `EmbeddedMediaPlayer` (de la librería `VLCj`) y un archivo de sonido o vídeo asociado. La construcción de estas ventanas necesitará del archivo anterior. Durante la construcción, se añadirá el panel de reproducción (`EmbeddedMediaPlayerComponent`), que será el que muestre el contenido de los vídeos. Dicho panel incluye el reproductor mencionado anteriormente. Las ventanas VLC dispondrán también de una referencia a la ventana principal que permitirá actualizar los controles de sonido y vídeo.
+
+El reproductor de la ventana VLC dispone de las funciones `play` y `pause` deseadas (además de la función `playMedia(File)`, a partir de la cual se establece el archivo de audio o vídeo que se va a reproducir, si todavía no había sido establecido). La ventana VLC diseñada ofrece funciones envolventes `play` y `pause` que llaman a sus homónimas del reproductor, además de hacer algunas comprobaciones adicionales.
+
+Una vez definidas estas ventanas, la interfaz gráfica contendrá una referencia a la ventana VLC que se esté reproduciendo en ese momento (si la hay), además de contener un diccionario, donde las claves son los archivos en la lista de reproducción, y los valores serán las correspondientes ventanas VLC asociadas. Entonces, si se pulsa el botón Play/Pause y la ventana VLC actual existe y está reproduciendo una canción, esta se pausará. Si no hay ninguna ventana VLC reproduciendo, entonces se obtendrá el archivo actual en la lista de reproducción, y se buscará en el diccionario de ventanas su ventana asociada. Si la hay, esta ventana se enviará al frente y se reproducirá. Si no la hay, se generará una nueva ventana VLC para ese archivo, y se añadirá al diccionario. Esta ventana solo se hará visible para los archivos de vídeo, por lo que para los archivos de audio no se visualizarán ventanas. Una vez creada y añadida la ventana, comenzará la reproducción del archivo. Si una ventana se cierra, se eliminará del diccionario y volverá a ser abierta posteriormente si vuelve a seleccionarse su archivo asociado.
+
+La ventana VLC dispone además internamente de una clase `VideoListener`, encargada de escuchar los eventos generados por el reproductor. En ella se manejan los eventos `finished`, `paused`, `stopped` y `playing`, los cuales indican, según cada circunstancia, que la ventana principal debe actualizar el estado de los botones de control. Estos manejadores efectuarán, por tanto, el cambio entre los botones de Play y Pause, entre otras acciones que se mostrarán en los siguientes puntos. La asignación del listener al reproductor se realiza en el constructor.
+
+**Parada.** \raisebox{0mm}{\fbox{\includegraphics[width=4mm]{./images/stop.png}}}
+
+Al igual que los métodos de reproducción y pausa, el reproductor de la ventana VLC dispone de un método `stop`. La ventana VLC dispone de la misma forma un método `stop` envolvente. Este método es llamado cuando se pulsa el botón de Stop, haciendo que finalice (y se reinicie) la reproducción.
+
+**Gestión del tiempo en la ventana de reproducción.** 
+
+La ventana de reproducción dispondrá además de un temporizador (clase `Timer` de Java), que definirá una acción cada vez que pase un determinado plazo de tiempo. Esta acción consistirá en actualizar la barra de reproducción de la ventana principal, según la posición del sonido en el reproductor. El reproductor permite obtener esta posición gracias al método `getPosition`, que devuelve la posición relativa del sonido o vídeo. Para el manejo conjunto de la barra de reproducción y las etiquetas con los tiempos se ha desarrollado una clase `ClipSlider`, en el paquete `sm.jlsd.ui`, que es un `JPanel` que permite gestionar conjuntamente todas las mediciones de tiempo de la barra de reproducción.
+
+El temporizador se activará siempre que se llame al método `play` de la ventana VLC, y se desactivará siempre que se escuche alguno de los eventos `finished`, `paused` o `stopped`.
+
+**Modificación de la posición de la canción.**
+
+De la misma forma que el deslizador de reproducción se actualiza conforme avanza la reproducción, el usuario puede arrastrarlo para colocarlo en la posición que desee. Mediante un evento de ratón en el deslizador, se detecta si ha habido cambios de posición, y si los ha habido, se actualiza la posición del reproductor. El reproductor permite este cambio de posición mediante su método `setPosition(float)`, que establece la posición mediante una fracción que representa la cantidad de canción a partir de la que empezar a reproducir. La ventana VLC ofrece el método envolvente `seek(double)` para realizar estos cambios de posición.
+
+Para concluir, se analizarán los tres últimos requisitos de este módulo, correspondientes a la grabación de sonidos, a la gestión de la Webcam y a la toma de capturas de vídeo y webcam.
+
+**Grabación de sonidos.** \raisebox{0mm}{\fbox{\includegraphics[width=4mm]{./images/record.png}}}
+
+La grabación de sonidos se ha realizado mediante la clase `SMSoundRecorder`, de `sm.sound`. Los objetos de esta clase necesitan el archivo de audio donde guardar la grabación, durante su construcción, y disponen de un método `record`, que se encarga de grabar el sonido en dicho archivo. La grabación finaliza cuando se llama al método `stop`.
+
+El botón de grabación gestiona tanto el inicio como la finalización de la grabación. Cuando se inicia, se genera en primer lugar un archivo temporal, que será sobre el que se guarde la grabación. La clase `File` proporciona para ello el método estático `createTempFile`. Una vez creado al archivo, se crea el reproductor y se inicia la grabación.
+
+De la misma forma, si se está realizando una grabación, al pulsar de nuevo el botón esta finalizará y se abrirá un diálogo dando la opción de guardar el archivo, de forma que el usuario podría cancelar el guardado si lo deseara, una vez grabado el sonido. Si elige una ubicación, el archivo será guardado y se añadirá automáticamente a la lista de reproducción.
+
+La actualización del botón de grabación se realiza gracias a la clase `RecordManager`, una clase interna dentro de la ventana principal, que es un `LineListener` diseñado para escuchar los eventos `START` y `STOP`. Este listener se asocia al grabador de sonido después de su creación.
+
+Por último, junto al botón de grabación está disponible un contador del tiempo de grabación. El tiempo se actualiza gracias a un `Timer` definido en la ventana principal, que se ejecuta periódicamente para realizar esta acción. Dicho temporizador se activa en cuanto se inicia la grabación y se desactiva cuando esta termina. El temporizador toma para la actualización los valores obtenidos del objeto `DataLine` contenido en el interior del grabador.
+
+**Webcam.** \raisebox{0mm}{\fbox{\includegraphics[width=4mm]{./images/Camara.png}}}
+
+La aplicación permite encender la webcam del ordenador, si este dispone de una, y visualizar su contenido en una ventana específica. Para el desarrollo de esta parte de la aplicación se ha utilizado la biblioteca Webcam Capture API [^sarxos].
+
+El manejo de la Webcam se ha realizado mediante la creación de un tipo de ventana específica, `CameraWindow`. Esta clase se ha creado de forma que sea *singleton*, es decir, solo se posee una única instancia de esta ventana. Cuando se pulsa el botón de la webcam, se abrirá esta ventana, y si ya estaba abierta, simplemente se traerá hacia adelante.
+
+La ventana de la cámara contendrá un atributo del tipo `Webcam`, de la biblioteca de Webcam Capture API, que representará a la cámara. Durante la construcción de la ventana, este atributo cámara será asociado a la cámara del ordenador. Si ha habido éxito en dicha operación, la cámara se encenderá. A continuación, un objeto del tipo `WebcamPanel` será añadido a la ventana. Este panel se construye a partir de la cámara, y mostrará los contenidos que se estén viendo a través de ella. Tras este proceso la ventana de la cámara estará completamente operativa.
+
+Por último, la ventana de la cámara tendrá asignado un manejador de eventos para su posible cierre, en el cual se apagará la cámara, dejando de grabar por tanto si la ventana se cierra.
+
+[^sarxos]: <https://github.com/sarxos/webcam-capture>
+
+**Capturas de de vídeo y de webcam.** \raisebox{0mm}{\fbox{\includegraphics[width=4mm]{./images/Capturar.png}}}
+
+La aplicación puede realizar tanto capturas de vídeo como de la webcam, gracias a las bibliotecas utilizadas para su diseño. En el caso de la cámara, la clase `Webcam` dispone del método `getImage`, que toma la captura deseada. En el caso del reproductor VLC, dispone de la función `getSnapshot`, que realiza la misma función. En ambos casos, podemos obtener la imagen con la captura, que pasará a formar parte de una nueva ventana de imagen.
+
+Para concluir, la figura \ref{fig:resumen_av} ejemplifica los distintos medios audiovisuales funcionando conjuntamente en la aplicación.
+
+\begin{figure}[h]
+\centering
+\includegraphics{./images/resumen_av.png}
+\caption{Ejemplificación de los medios audiovisuales de la aplicación. A la izquierda, la cámara web funcionando. En el centro, una captura de la tomada con la webcam editada en un lienzo. A la derecha, la reproducción de un vídeo.} \label{fig:resumen_av}
+\end{figure}

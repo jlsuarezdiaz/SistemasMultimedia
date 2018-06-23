@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project-private xmlns="http://www.netbeans.org/ns/project-private/1">
+    <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="0"/>
+    <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
+        <group>
+            <file>file:/home/jlsuarezdiaz/NetBeansProjects/SM.JLSD.Library/src/sm/jlsd/image/ColdEffectOp.java</file>
+            <file>file:/home/jlsuarezdiaz/NetBeansProjects/SM.JLSD.Library/src/sm/jlsd/graphics/JArea.java</file>
+            <file>file:/home/jlsuarezdiaz/NetBeansProjects/SM.JLSD.Library/src/sm/jlsd/graphics/JFreePath.java</file>
+            <file>file:/home/jlsuarezdiaz/NetBeansProjects/SM.JLSD.Library/src/sm/jlsd/image/SepiaOp.java</file>
+            <file>file:/home/jlsuarezdiaz/NetBeansProjects/SM.JLSD.Library/src/sm/jlsd/ui/Canvas2DImage.java</file>
+            <file>file:/home/jlsuarezdiaz/NetBeansProjects/SM.JLSD.Library/src/sm/jlsd/utils/ImageUtils.java</file>
+            <file>file:/home/jlsuarezdiaz/NetBeansProjects/SM.JLSD.Library/src/sm/jlsd/image/BackgroundRemoveOp.java</file>
+            <file>file:/home/jlsuarezdiaz/NetBeansProjects/SM.JLSD.Library/src/sm/jlsd/graphics/JSun.java</file>
+            <file>file:/home/jlsuarezdiaz/NetBeansProjects/SM.JLSD.Library/src/sm/jlsd/ui/Canvas2D.java</file>
+            <file>file:/home/jlsuarezdiaz/NetBeansProjects/SM.JLSD.Library/src/sm/jlsd/graphics/JArc.java</file>
+            <file>file:/home/jlsuarezdiaz/NetBeansProjects/SM.JLSD.Library/src/sm/jlsd/graphics/JPolygon.java</file>
+            <file>file:/home/jlsuarezdiaz/NetBeansProjects/SM.JLSD.Library/src/sm/jlsd/image/JLookupTableProducer.java</file>
+            <file>file:/home/jlsuarezdiaz/NetBeansProjects/SM.JLSD.Library/src/sm/jlsd/graphics/JQuadCurve.java</file>
+            <file>file:/home/jlsuarezdiaz/NetBeansProjects/SM.JLSD.Library/src/sm/jlsd/graphics/PaintTool.java</file>
+            <file>file:/home/jlsuarezdiaz/NetBeansProjects/SM.JLSD.Library/src/sm/jlsd/graphics/JRectangle.java</file>
+            <file>file:/home/jlsuarezdiaz/NetBeansProjects/SM.JLSD.Library/src/sm/jlsd/graphics/BasicAttributePainter.java</file>
+            <file>file:/home/jlsuarezdiaz/NetBeansProjects/SM.JLSD.Library/src/sm/jlsd/ui/ClipSlider.java</file>
+            <file>file:/home/jlsuarezdiaz/NetBeansProjects/SM.JLSD.Library/src/sm/jlsd/image/UmbralizacionOp.java</file>
+            <file>file:/home/jlsuarezdiaz/NetBeansProjects/SM.JLSD.Library/src/sm/jlsd/image/SobelOp.java</file>
+            <file>file:/home/jlsuarezdiaz/NetBeansProjects/SM.JLSD.Library/src/sm/jlsd/image/ProductOp.java</file>
+            <file>file:/home/jlsuarezdiaz/NetBeansProjects/SM.JLSD.Library/src/sm/jlsd/image/FireEffectOp.java</file>
+            <file>file:/home/jlsuarezdiaz/NetBeansProjects/SM.JLSD.Library/src/sm/jlsd/graphics/ShapePainter.java</file>
+            <file>file:/home/jlsuarezdiaz/NetBeansProjects/SM.JLSD.Library/src/sm/jlsd/graphics/BasicShapePainter.java</file>
+            <file>file:/home/jlsuarezdiaz/NetBeansProjects/SM.JLSD.Library/src/sm/jlsd/graphics/JPoint.java</file>
+            <file>file:/home/jlsuarezdiaz/NetBeansProjects/SM.JLSD.Library/src/sm/jlsd/ui/HistogramPanel.java</file>
+            <file>file:/home/jlsuarezdiaz/NetBeansProjects/SM.JLSD.Library/src/sm/jlsd/graphics/JGeneralPath.java</file>
+            <file>file:/home/jlsuarezdiaz/NetBeansProjects/SM.JLSD.Library/src/sm/jlsd/graphics/BasicStrokeType.java</file>
+            <file>file:/home/jlsuarezdiaz/NetBeansProjects/SM.JLSD.Library/src/sm/jlsd/graphics/JRoundRectangle.java</file>
+            <file>file:/home/jlsuarezdiaz/NetBeansProjects/SM.JLSD.Library/src/sm/jlsd/graphics/JShape.java</file>
+            <file>file:/home/jlsuarezdiaz/NetBeansProjects/SM.JLSD.Library/src/sm/jlsd/utils/MediaFileFilter.java</file>
+            <file>file:/home/jlsuarezdiaz/NetBeansProjects/SM.JLSD.Library/src/sm/jlsd/image/JKernelProducer.java</file>
+            <file>file:/home/jlsuarezdiaz/NetBeansProjects/SM.JLSD.Library/src/sm/jlsd/graphics/JCubicCurve.java</file>
+            <file>file:/home/jlsuarezdiaz/NetBeansProjects/SM.JLSD.Library/src/sm/jlsd/ui/ColorListCellRenderer.java</file>
+            <file>file:/home/jlsuarezdiaz/NetBeansProjects/SM.JLSD.Library/src/sm/jlsd/graphics/JLine.java</file>
+            <file>file:/home/jlsuarezdiaz/NetBeansProjects/SM.JLSD.Library/src/sm/jlsd/image/ModularTranslateOp.java</file>
+            <file>file:/home/jlsuarezdiaz/NetBeansProjects/SM.JLSD.Library/src/sm/jlsd/graphics/JEllipse.java</file>
+        </group>
+    </open-files>
+</project-private>
